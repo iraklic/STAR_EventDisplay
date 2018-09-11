@@ -120,6 +120,7 @@ void myStEventAnalyser(const char * file, const int eventToSelect = -1) {
 			if (!gTrack) continue;
 			if (! gTrack->detectorInfo()) {cout << "=============== detectorInfo is missing" << endl; continue;}
 			StPtrVecHit ghvec = gTrack->detectorInfo()->hits();
+			cout << " - - - -- - - - - " << ghvec.size() << endl;
 			for (int hit = 0; hit < ghvec.size(); hit++) {
 //				if (hvec[hit]->detector() == kTpcId) {
 					StTpcHit *tpcHit = static_cast<StTpcHit *> (ghvec[hit]);
@@ -127,12 +128,7 @@ void myStEventAnalyser(const char * file, const int eventToSelect = -1) {
 //					if (!tpcHit || tpcHit->sector() != 20) continue;
 					if (!tpcHit) continue;
 					if (tpcHit->flag() != 0) continue;
-					if(!doOnce) {
-						outFile = fopen(outFileName, "w");
-						outFile_iTPC = fopen(outFileName_iTPC, "w");
-						outFile_TPC = fopen(outFileName_TPC, "w");
-						doOnce = true;
-					}
+
 					float hitX = tpcHit->position().x();
 					float hitY = tpcHit->position().y();
 					float hitZ = tpcHit->position().z();
