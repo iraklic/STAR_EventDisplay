@@ -105,6 +105,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 						if (tpcHit->flag() == 0) NoHits++;
 						NoBadHits++;
 //					cout << "tpcHit : " << pEvent->id() << " : " << tpcHit->flag() << ", " <<  tpcHit->pad() << ", " << tpcHit->padrow() << ", " << tpcHit->timeBucket() << ", " << tpcHit->adc() << ", " << tpcHit->position().x() << ", " << tpcHit->position().y() << ", " << tpcHit->position().z() << endl;
+					printf("tpcHit : %d : %d : %d : %d : %.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", pEvent->id(), tpcHit->flag(), sec, tpcHit->padrow(), tpcHit->pad(), tpcHit->timeBucket(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					tempHit.hitx =  tpcHit->position().x();
 //					tempHit.hity =  tpcHit->position().y();
 //					tempHit.hitz =  tpcHit->position().z();
