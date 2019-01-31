@@ -67,13 +67,13 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		printCounter++;
 
 		int myNTracks = myTrackNode.size();
-/*
+
 //		THIS IS TO SELECT EVENTS WITH LOTS OF TRACKS
 		if (myNTracks < 50) {
 			if (eventToSelect != -1 && pEvent->id() != eventToSelect) event--;
 			continue;
 		}
-*/
+
 		/*
 		if (pEvent->id() > eventToSelect && eventToSelect != -1) {
 			cout << "-------------------------------------------------" << endl;
@@ -119,7 +119,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(outFileAll, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
 		fprintf(outFileAll, "\"HITS\": {\"TPC\": [\n");
 
-		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-323.5 -323.5 647 647\"\n\twidth=\"647\"\n\theight=\"647\"\nt\style=\"background-color: rgb(255, 255, 255);\">");
+		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-323.5 -323.5 647 647\"\n\twidth=\"647\"\n\theight=\"647\"\n\tstyle=\"background-color: rgb(0, 0, 0);\">\n");
+		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 		fprintf(outFileT, "{\"EVENT\": {	\"R\": %d, 	\"Evt\": %d, 	\"B\": 0.5, 	\"tm\": 1528087733 },\n", pEvent->runId(), pEvent->id());
 		fprintf(outFileT, "\t\"META\": {\n\t\t\"TRACKS\": {\"type\": \"3D\", \n\"tracks\": { \n\t\t\t\"size\":5, \"r_min\": 500, \"r_max\": 2000\n\t\t\t}\n\t\t}\n\t},");
@@ -155,6 +156,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //					myHits[tpcHit->flag()].push_back(tempHit);
 					fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" fill=\"#01879f\" />", tpcHit->position().x(), tpcHit->position().y());
+					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(225, 239, 95)\" />\n", tpcHit->position().x(), tpcHit->position().y());
 					}
 				}
 			} // Loop over rows in sector 20
@@ -258,7 +260,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			for (int hit = 0; hit < ghvec.size(); hit++) {
 //				if (hvec[hit]->detector() == kTpcId) {
 					StTpcHit *tpcHit = static_cast<StTpcHit *> (ghvec[hit]);
-					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(150, %d, %d)\" />\n", tpcHit->position().x(), tpcHit->position().y(), 100 + color, 200 - color);
+//					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(150, %d, %d)\" />\n", tpcHit->position().x(), tpcHit->position().y(), 100 + color, 200 - color);
                                        if (!tpcHit) continue;
                                        if (tpcHit->flag() != 0) continue;
                                        float hitX = tpcHit->position().x();
