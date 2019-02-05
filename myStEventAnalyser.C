@@ -69,10 +69,12 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		int myNTracks = myTrackNode.size();
 
 //		THIS IS TO SELECT EVENTS WITH LOTS OF TRACKS
+/*
 		if (myNTracks < 50) {
 			if (eventToSelect != -1 && pEvent->id() != eventToSelect) event--;
 			continue;
 		}
+*/
 
 		/*
 		if (pEvent->id() > eventToSelect && eventToSelect != -1) {
@@ -93,6 +95,12 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			}
 //		}
 
+		StTpcHitCollection* TpcHitCollection = pEvent->tpcHitCollection();
+		if (!TpcHitCollection) {
+			cout << "No TPC Hit Collection in this event, skipping to the next one." << endl;
+			continue;
+		}
+
 		cout << " -=- * * * Event: Run "<< pEvent->runId() << " Event No: " << pEvent->id() << " * * * -=-" << endl;
 		sprintf(outFileName, "StEvent_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(outFileAllName, "AllHits_%d_%d.json", pEvent->runId(),  pEvent->id());
@@ -103,13 +111,6 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		outFileAll = fopen(outFileAllName, "w");
 		outFileT = fopen(outFileNameT, "w");
 
-		StTpcHitCollection* TpcHitCollection = pEvent->tpcHitCollection();
-		if (!TpcHitCollection) {
-			cout << "No TPC Hit Collection in this event, skipping to the next one." << endl;
-			continue;
-		}
-		unsigned int numberOfSectors = TpcHitCollection->numberOfSectors();
-
 //		ADDING HEADER TO THE OUTPUT json FILE
 		fprintf(outFile, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
 		fprintf(outFile, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
@@ -119,7 +120,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(outFileAll, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
 		fprintf(outFileAll, "\"HITS\": {\"TPC\": [\n");
 
-		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-323.5 -323.5 647 647\"\n\twidth=\"647\"\n\theight=\"647\"\n\tstyle=\"background-color: rgb(0, 0, 0);\">\n");
+		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\">\n");
 		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 		fprintf(outFileT, "{\"EVENT\": {	\"R\": %d, 	\"Evt\": %d, 	\"B\": 0.5, 	\"tm\": 1528087733 },\n", pEvent->runId(), pEvent->id());
@@ -156,7 +157,9 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //					myHits[tpcHit->flag()].push_back(tempHit);
 					fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" fill=\"#01879f\" />", tpcHit->position().x(), tpcHit->position().y());
-					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(225, 239, 95)\" />\n", tpcHit->position().x(), tpcHit->position().y());
+
+					const char * hitColor[10] = {"225, 239, 95", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "225, 0, 0"};
+					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().x(), tpcHit->position().y(), hitColor[tpcHit->flag()]);
 					}
 				}
 			} // Loop over rows in sector 20
