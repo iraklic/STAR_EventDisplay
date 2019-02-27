@@ -35,11 +35,13 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 	FILE * outFile;
 	FILE * outFileAll;
+	FILE * svgOutAll;
 	FILE * svgOut;
 	FILE * outFileT;
 	char outFileName[100];
 	char outFileAllName[100];
 	char svgOutFile[100];
+	char svgOutFileAll[100];
 	char outFileNameT[100];
 
 //	const char * file = "st_cosmic_adc_19053068_raw_2000015.event.root";
@@ -69,12 +71,13 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		int myNTracks = myTrackNode.size();
 
 //		THIS IS TO SELECT EVENTS WITH LOTS OF TRACKS
-/*
+
+#if 0
 		if (myNTracks < 50) {
-			if (eventToSelect != -1 && pEvent->id() != eventToSelect) event--;
+			event--;
 			continue;
 		}
-*/
+# endif
 
 		/*
 		if (pEvent->id() > eventToSelect && eventToSelect != -1) {
@@ -105,27 +108,21 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		sprintf(outFileName, "StEvent_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(outFileAllName, "AllHits_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFile, "hits_%d_%d.svg", pEvent->runId(),  pEvent->id());
+		sprintf(svgOutFileAll, "Allhits_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(outFileNameT, "StTracks_%d_%d.json", pEvent->runId(),  pEvent->id());
 		outFile = fopen(outFileName, "w");
 		svgOut = fopen(svgOutFile, "w");
+		svgOutAll = fopen(svgOutFileAll, "w");
 		outFileAll = fopen(outFileAllName, "w");
 		outFileT = fopen(outFileNameT, "w");
 
 //		ADDING HEADER TO THE OUTPUT json FILE
-		fprintf(outFile, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
-		fprintf(outFile, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
-		fprintf(outFile, "\"HITS\": {\"TPC\": [\n");
-
-		fprintf(outFileAll, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
-		fprintf(outFileAll, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
-		fprintf(outFileAll, "\"HITS\": {\"TPC\": [\n");
-
+		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\">\n");
+		fprintf(svgOutAll, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
+//		ADDING HEADER TO THE OUTPUT json FILE
 		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\">\n");
 		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
-		fprintf(outFileT, "{\"EVENT\": {	\"R\": %d, 	\"Evt\": %d, 	\"B\": 0.5, 	\"tm\": 1528087733 },\n", pEvent->runId(), pEvent->id());
-		fprintf(outFileT, "\t\"META\": {\n\t\t\"TRACKS\": {\"type\": \"3D\", \n\"tracks\": { \n\t\t\t\"size\":5, \"r_min\": 500, \"r_max\": 2000\n\t\t\t}\n\t\t}\n\t},");
-		fprintf(outFileT, "\"TRACKS\": { \"tracks\":[\n");
 
 //		BELOW IS MY iTPC 2018 RELATED CHECKS THAT CAN BE REMOVED IF NOT NEEDED ==============================
 		for (int sec = 0; sec < 24; sec++) {
@@ -158,8 +155,9 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 					fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" fill=\"#01879f\" />", tpcHit->position().x(), tpcHit->position().y());
 
-					const char * hitColor[10] = {"225, 239, 95", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "225, 0, 0"};
-					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().x(), tpcHit->position().y(), hitColor[tpcHit->flag()]);
+					const char * hitColor[6] = {"225, 239, 95", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "225, 0, 0"};
+					int hitFlag = tpcHit->flag() > 5 ? 5 :  tpcHit->flag();
+					fprintf(svgOutAll, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().x(), tpcHit->position().y(), hitColor[hitFlag]);
 					}
 				}
 			} // Loop over rows in sector 20
@@ -191,7 +189,21 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 		StSPtrVecTrackNode & trackNode = pEvent->trackNodes();
 		int nTracks = trackNode.size();
-//		if (nTracks < 20) continue; // removing hits from short tracks that are usually not used in the analysis
+//		if (nTracks < 100) continue; // removing hits from short tracks that are usually not used in the analysis
+
+		if (!nTracks) continue;
+		fprintf(outFile, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
+		fprintf(outFile, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
+		fprintf(outFile, "\"HITS\": {\"TPC\": [\n");
+
+		fprintf(outFileAll, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
+		fprintf(outFileAll, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
+		fprintf(outFileAll, "\"HITS\": {\"TPC\": [\n");
+
+		fprintf(outFileT, "{\"EVENT\": {	\"R\": %d, 	\"Evt\": %d, 	\"B\": 0.5, 	\"tm\": 1528087733 },\n", pEvent->runId(), pEvent->id());
+		fprintf(outFileT, "\t\"META\": {\n\t\t\"TRACKS\": {\"type\": \"3D\", \n\"tracks\": { \n\t\t\t\"size\":5, \"r_min\": 500, \"r_max\": 2000\n\t\t\t}\n\t\t}\n\t},");
+		fprintf(outFileT, "\"TRACKS\": { \"tracks\":[\n");
+
 
 		StTrackNode * node = 0;
 		cout << "Number of tracks : " << nTracks << endl;
@@ -263,7 +275,43 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			for (int hit = 0; hit < ghvec.size(); hit++) {
 //				if (hvec[hit]->detector() == kTpcId) {
 					StTpcHit *tpcHit = static_cast<StTpcHit *> (ghvec[hit]);
-//					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(150, %d, %d)\" />\n", tpcHit->position().x(), tpcHit->position().y(), 100 + color, 200 - color);
+
+//					BELOW IS THE COLOR SETUP FOR THE HITS ON THE TRACK ACCORDING TO THE STAR COLOR SCHEME
+					double int myR, myG, myB;
+					double trackP = gTrackParams->momentum();
+					double maxP = 4.5;
+					double colval = trackP < maxP ? trackP / maxP : 1;
+					double colvaltimes4 = colval * 4.0;
+
+					if ( colval < 0.25 ) {
+						myG = colvaltimes4;
+						myB = myG;
+						myB += 1.0 - colvaltimes4;
+					}
+					else if ( colval < 0.5 ) {
+						myG = 1.0 - ( colvaltimes4 - 1.0 );
+						myB = myG;
+						myG += colvaltimes4 - 1.0;
+					}
+					else if ( colval < 0.75 ) {
+						myR = colvaltimes4 - 2.0;
+						myG = myR;
+						myG += 1.0 - ( colvaltimes4 - 2.0 );
+					}
+					else {
+						myR = 1.0 - ( colvaltimes4 - 3.0 );
+						myG = myR;
+						myR += colvaltimes4 - 3.0;
+					}
+					myR *= 255;
+					myG *= 255;
+					myB *= 255;
+//
+
+
+					cout << myR << " - " << myG << " - " << myB << endl;
+
+					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%d, %d, %d)\" />\n", tpcHit->position().x(), tpcHit->position().y(), myR, myG, myB);
                                        if (!tpcHit) continue;
                                        if (tpcHit->flag() != 0) continue;
                                        float hitX = tpcHit->position().x();
@@ -286,6 +334,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(outFile, "[0,0,0]]\n}\n}");
 		fprintf(outFileAll, "[0,0,0]]\n}\n}");
 		fprintf(svgOut, "</svg>");
+		fprintf(svgOutAll, "</svg>");
 		fprintf(outFileT, "{}\n]\n}\n}");
 		fclose(outFile);
 		fclose(outFileT);
