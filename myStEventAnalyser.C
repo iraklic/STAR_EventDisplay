@@ -49,8 +49,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 	loadSharedLibraries();
 
 	gROOT->LoadMacro("bfc.C");
-//	TString Chain("StEvent, nodefault, mysql, in");
-	TString Chain("StEvent, nodefault, mysql, in, quiet");
+	TString Chain("StEvent, nodefault, mysql, in");
+//	TString Chain("StEvent, nodefault, mysql, in, quiet");
 	bfc(0, Chain, file); // This will make chain
 
 //	LOOP OVER EVENTS
@@ -72,7 +72,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 //		THIS IS TO SELECT EVENTS WITH LOTS OF TRACKS
 
-#if 0
+#if 1
 		if (myNTracks < 50) {
 			event--;
 			continue;
@@ -117,16 +117,16 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		outFileT = fopen(outFileNameT, "w");
 
 //		ADDING HEADER TO THE OUTPUT json FILE
-		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\">\n");
+		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(svgOutAll, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 //		ADDING HEADER TO THE OUTPUT json FILE
-		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\">\n");
+		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 
 //		BELOW IS MY iTPC 2018 RELATED CHECKS THAT CAN BE REMOVED IF NOT NEEDED ==============================
 		for (int sec = 0; sec < 24; sec++) {
-			StTpcSectorHitCollection* sectorCollection = TpcHitCollection->sector(sec); //Get sector 20
+			StTpcSectorHitCollection* sectorCollection = TpcHitCollection->sector(sec);
 
 			unsigned int numberOfPadrows = sectorCollection->numberOfPadrows();
 			unsigned long NoHits = 0;
@@ -146,7 +146,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 						if (tpcHit->flag() == 0) NoHits++;
 						NoBadHits++;
 //					cout << "tpcHit : " << pEvent->id() << " : " << tpcHit->flag() << ", " <<  tpcHit->pad() << ", " << tpcHit->padrow() << ", " << tpcHit->timeBucket() << ", " << tpcHit->adc() << ", " << tpcHit->position().x() << ", " << tpcHit->position().y() << ", " << tpcHit->position().z() << endl;
-//					printf("tpcHit : %d : %d : %d : %d : %.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", pEvent->id(), tpcHit->flag(), sec, tpcHit->padrow(), tpcHit->pad(), tpcHit->timeBucket(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
+					printf("tpcHit : %d : %d : %d : %d : %.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", pEvent->id(), tpcHit->flag(), sec + 1, tpcHit->padrow(), tpcHit->pad(), tpcHit->timeBucket(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					tempHit.hitx =  tpcHit->position().x();
 //					tempHit.hity =  tpcHit->position().y();
 //					tempHit.hitz =  tpcHit->position().z();
