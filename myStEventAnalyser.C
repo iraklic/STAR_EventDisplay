@@ -2,6 +2,7 @@
 //#include <TROOT.h>
 #include <vector>
 #include <iostream>
+
 /*
 	struct hitContainer {
 		float adc;
@@ -70,10 +71,15 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 		int myNTracks = myTrackNode.size();
 
-//		THIS IS TO SELECT EVENTS WITH LOTS OF TRACKS
-
+//		THIS IS TO SELECT EVENTS WITH SOME PRESET CUTS
 #if 1
-		if (myNTracks < 50) {
+		StPrimaryVertex * pv = pEvent->primaryVertex();
+//		double pvz = pv->position().z();
+//		if (fabs(pvz) > 5) {
+//			event--;
+//			continue;
+//		}
+		if (myNTracks < 500) {
 			event--;
 			continue;
 		}
@@ -124,7 +130,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 
-//		BELOW IS MY iTPC 2018 RELATED CHECKS THAT CAN BE REMOVED IF NOT NEEDED ==============================
+//		All hits and sector loop below ==============================
+#if 0
 		for (int sec = 0; sec < 24; sec++) {
 			StTpcSectorHitCollection* sectorCollection = TpcHitCollection->sector(sec);
 
@@ -146,13 +153,14 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 						if (tpcHit->flag() == 0) NoHits++;
 						NoBadHits++;
 //					cout << "tpcHit : " << pEvent->id() << " : " << tpcHit->flag() << ", " <<  tpcHit->pad() << ", " << tpcHit->padrow() << ", " << tpcHit->timeBucket() << ", " << tpcHit->adc() << ", " << tpcHit->position().x() << ", " << tpcHit->position().y() << ", " << tpcHit->position().z() << endl;
-					printf("tpcHit : %d : %d : %d : %d : %.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", pEvent->id(), tpcHit->flag(), sec + 1, tpcHit->padrow(), tpcHit->pad(), tpcHit->timeBucket(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
+//					printf("tpcHit : %d : %d : %d : %d : %.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", pEvent->id(), tpcHit->flag(), sec + 1, tpcHit->padrow(), tpcHit->pad(), tpcHit->timeBucket(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					tempHit.hitx =  tpcHit->position().x();
 //					tempHit.hity =  tpcHit->position().y();
 //					tempHit.hitz =  tpcHit->position().z();
 //					tempHit.adc =  tpcHit->adc();
 //					myHits[tpcHit->flag()].push_back(tempHit);
-					fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
+//					if (tpcHit->position().x() >= 0)
+						fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" fill=\"#01879f\" />", tpcHit->position().x(), tpcHit->position().y());
 
 					const char * hitColor[6] = {"225, 239, 95", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "225, 0, 0"};
@@ -162,6 +170,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 				}
 			} // Loop over rows in sector 20
 		} // loop over sectors
+#endif
 
 //		WRITING OUT FILE FOR ALL HITS
 //		fprintf(outFile, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
@@ -211,27 +220,17 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			node = trackNode[track];
 			if (!node) {cout << "NO NODE" << endl; continue;}
 
-#if 0
+#if 1 
 //			PRIMARY TRACKS
 			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
-			if (!pTrack) {cout << "NO pTrack" << endl; continue;}
-			node = trackNode[track];
-			if (!node) {cout << "NO NODE" << endl; continue;}
-
-//			PRIMARY TRACKS
-			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
-			if (!pTrack) {cout << "NO pTrack" << endl; continue;}
-			node = trackNode[track];
-			if (!node) {cout << "NO NODE" << endl; continue;}
-
-//			PRIMARY TRACKS
-			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
-			if (!pTrack) {cout << "NO pTrack" << endl; continue;}
+			if (!pTrack) continue;
 			if (! pTrack->detectorInfo()) {cout << "=============== detectorInfo is missing" << endl; continue;}
 			StPtrVecHit phvec = pTrack->detectorInfo()->hits();
+			StTrackGeometry * pTrackParams = pTrack->geometry();
+			if (!pTrackParams) {cout << "-=- No track params for primary track -=-" << endl; continue;}
 
-			cout << "Event: Run "<< pEvent->runId() << " Event No: " << pEvent->id() << endl;
-			cout << "Track number : " << track << endl;
+//			if (fabs(pTrackParams->momentum().x() / pTrackParams->momentum().y()) < 0.2679492 && pTrackParams->momentum().z() <= 0 && pTrackParams->momentum().y() <= 0) // SELECTION FOR SECTORS 12, 6, 18, 24
+				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), pTrackParams->momentum().y(), pTrackParams->momentum().z(), pTrackParams->charge(), pTrack->length());
 
 			for (int hit = 0; hit < phvec.size(); hit++) {
 //				if (hvec[hit]->detector() == kTpcId) {
@@ -247,9 +246,9 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //					if (hitZ > 0) continue;
 //					if (tpcHit->padrow() > 40) fprintf(outFile_TPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 //					else fprintf(outFile_iTPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
-//
-					fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 
+//					if (fabs(hitX / hitY) < 0.2679492 && hitY <= 0 && hitZ >= 0) // SELECTION FOR SECTORS 12, 6, 18, 24
+						fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 
 //					cout << "[" << hitX << ", " << hitY << ", " << hitZ << "]," << endl;
 //					fprintf(outFile, "%d, %d, %d, %d, %f, %f, %f, %f\n", track, tpcHit->pad(), tpcHit->padrow(), tpcHit->timeBucket(), tpcHit->adc(), hitX, hitY, hitZ);
@@ -257,7 +256,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			}
 #endif
 
-#if 1
+#if 0
 //			GLOBAL TRACKS
 			StGlobalTrack* gTrack = static_cast<StGlobalTrack*>(node->track(global));
 			if (!gTrack) {cout << "NO gTrack" << endl; continue;}
@@ -268,7 +267,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 //			fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", gTrackParams->pt(), gTrackParams->momentum().x(), gTrackParams->momentum().y(), gTrackParams->momentum().z(), gTrackParams->origin().x(), gTrackParams->origin().y(), gTrackParams->origin().z(), gTrackParams->charge(), gTrack->length());
 //			fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", gTrackParams->pt(),  gTrackParams->origin().x(), gTrackParams->origin().y(), gTrackParams->origin().z(), gTrackParams->momentum().x(), gTrackParams->momentum().y(), gTrackParams->momentum().z(), gTrackParams->charge(), gTrack->length());
-			fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", gTrackParams->momentum().perp(),  gTrackParams->origin().x(), gTrackParams->origin().y(), gTrackParams->origin().z(), gTrackParams->momentum().x(), gTrackParams->momentum().y(), gTrackParams->momentum().z(), gTrackParams->charge(), gTrack->length());
+//			if (gTrackParams->origin().x() <= 0 && gTrackParams->momentum().x() <= 0)
+				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", gTrackParams->momentum().perp(),  gTrackParams->origin().x(), gTrackParams->origin().y(), gTrackParams->origin().z(), gTrackParams->momentum().x(), gTrackParams->momentum().y(), gTrackParams->momentum().z(), gTrackParams->charge(), gTrack->length());
 
 			int color = track*10;
 
@@ -306,12 +306,12 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 					myR *= 255;
 					myG *= 255;
 					myB *= 255;
-//
 
+//					cout << myR << " - " << myG << " - " << myB << endl;
 
-					cout << myR << " - " << myG << " - " << myB << endl;
-
-					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%d, %d, %d)\" />\n", tpcHit->position().x(), tpcHit->position().y(), myR, myG, myB);
+//					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%d, %d, %d)\" />\n", tpcHit->position().x(), tpcHit->position().y(), myR, myG, myB);
+//					if (tpcHit->position().x() <= 0)
+						fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(51,  204, 255)\" />\n", tpcHit->position().x(), tpcHit->position().y());
                                        if (!tpcHit) continue;
                                        if (tpcHit->flag() != 0) continue;
                                        float hitX = tpcHit->position().x();
@@ -321,7 +321,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //                                     if (hitZ > 0) continue;
 //                                     if (tpcHit->padrow() > 40) fprintf(outFile_TPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 //                                     else fprintf(outFile_iTPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
-                                       fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
+//					if (hitX >= 0)                                     
+	                                       fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 //                                     cout << "[" << hitX << ", " << hitY << ", " << hitZ << "]," << endl;
 
 //					if (!tpcHit || tpcHit->sector() != 20) continue;
