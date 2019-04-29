@@ -220,6 +220,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			node = trackNode[track];
 			if (!node) {cout << "NO NODE" << endl; continue;}
 
+
+			int up = 1; // 1 is vertically up y > 0 and -1 is vertically down y < 0
 #if 1 
 //			PRIMARY TRACKS
 			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
@@ -229,9 +231,11 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			StTrackGeometry * pTrackParams = pTrack->geometry();
 			if (!pTrackParams) {cout << "-=- No track params for primary track -=-" << endl; continue;}
 
-//			if (fabs(pTrackParams->momentum().x() / pTrackParams->momentum().y()) < 0.2679492 && pTrackParams->momentum().z() <= 0 && pTrackParams->momentum().y() <= 0) // SELECTION FOR SECTORS 12, 6, 18, 24
-				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), pTrackParams->momentum().y(), pTrackParams->momentum().z(), pTrackParams->charge(), pTrack->length());
+			if (pTrackParams->momentum().perp() < 0.5) continue;
+			if (fabs(pTrackParams->momentum().x() / pTrackParams->momentum().y()) < 0.2679492)  // SELECTION FOR SECTORS 12, 6, 18, 24
+				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), up*fabs(pTrackParams->momentum().y()), fabs(pTrackParams->momentum().z()), pTrackParams->charge(), pTrack->length());
 
+			if (phvec.size() < 20) continue; // SELECTION FOR NUMBER OF HITS ON THE TRACK
 			for (int hit = 0; hit < phvec.size(); hit++) {
 //				if (hvec[hit]->detector() == kTpcId) {
 					StTpcHit *tpcHit = static_cast<StTpcHit *> (phvec[hit]);
@@ -247,8 +251,9 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //					if (tpcHit->padrow() > 40) fprintf(outFile_TPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 //					else fprintf(outFile_iTPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 
-//					if (fabs(hitX / hitY) < 0.2679492 && hitY <= 0 && hitZ >= 0) // SELECTION FOR SECTORS 12, 6, 18, 24
-						fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
+					if (fabs(hitX / hitY) < 0.2679492) // SELECTION FOR SECTORS 12, 6, 18, 24
+						fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, up*fabs(hitY), -1*fabs(hitZ)); // MIRROR IMAGE
+//						fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 
 //					cout << "[" << hitX << ", " << hitY << ", " << hitZ << "]," << endl;
 //					fprintf(outFile, "%d, %d, %d, %d, %f, %f, %f, %f\n", track, tpcHit->pad(), tpcHit->padrow(), tpcHit->timeBucket(), tpcHit->adc(), hitX, hitY, hitZ);
