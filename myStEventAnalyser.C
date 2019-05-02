@@ -38,10 +38,14 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 	FILE * outFileAll;
 	FILE * svgOutAll;
 	FILE * svgOut;
+	FILE * svgOutT;
+	FILE * svgOut_perp;
 	FILE * outFileT;
 	char outFileName[100];
 	char outFileAllName[100];
+	char svgOutFile_perp[100];
 	char svgOutFile[100];
+	char svgOutFileT[100];
 	char svgOutFileAll[100];
 	char outFileNameT[100];
 
@@ -114,10 +118,14 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		sprintf(outFileName, "StEvent_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(outFileAllName, "AllHits_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFile, "hits_%d_%d.svg", pEvent->runId(),  pEvent->id());
+		sprintf(svgOutFileT, "tracks_%d_%d.svg", pEvent->runId(),  pEvent->id());
+		sprintf(svgOutFile_perp, "hits_perp_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFileAll, "Allhits_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(outFileNameT, "StTracks_%d_%d.json", pEvent->runId(),  pEvent->id());
 		outFile = fopen(outFileName, "w");
 		svgOut = fopen(svgOutFile, "w");
+		svgOutT = fopen(svgOutFileT, "w");
+		svgOut_perp = fopen(svgOutFile_perp, "w");
 		svgOutAll = fopen(svgOutFileAll, "w");
 		outFileAll = fopen(outFileAllName, "w");
 		outFileT = fopen(outFileNameT, "w");
@@ -125,9 +133,15 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //		ADDING HEADER TO THE OUTPUT json FILE
 		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(svgOutAll, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
-//		ADDING HEADER TO THE OUTPUT json FILE
+
 		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
+
+		fprintf(svgOutT, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(svgOutT, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
+
+		fprintf(svgOut_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+//		fprintf(svgOut_perp, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 
 //		All hits and sector loop below ==============================
@@ -220,22 +234,60 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			node = trackNode[track];
 			if (!node) {cout << "NO NODE" << endl; continue;}
 
-
-			int up = 1; // 1 is vertically up y > 0 and -1 is vertically down y < 0
-#if 1 
-//			PRIMARY TRACKS
 			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
 			if (!pTrack) continue;
 			if (! pTrack->detectorInfo()) {cout << "=============== detectorInfo is missing" << endl; continue;}
 			StPtrVecHit phvec = pTrack->detectorInfo()->hits();
 			StTrackGeometry * pTrackParams = pTrack->geometry();
+			StTrackGeometry * o_pTrackParams = pTrack->outerGeometry();
 			if (!pTrackParams) {cout << "-=- No track params for primary track -=-" << endl; continue;}
 
+			int up = 1; // 1 is vertically up y > 0 and -1 is vertically down y < 0
+#if 1 
+//			PRIMARY TRACKS
+//			BELOW IS THE COLOR SETUP FOR THE HITS ON THE TRACK ACCORDING TO THE STAR COLOR SCHEME
+			double int myR, myG, myB;
+			double trackP = pTrackParams->momentum().perp();
+			double maxP = 4.5;
+			double colval = trackP < maxP ? trackP / maxP : 1;
+			double colvaltimes4 = colval * 4.0;
+
+			if ( colval < 0.25 ) {
+				myG = colvaltimes4;
+				myB = myG;
+				myB += 1.0 - colvaltimes4;
+			}
+			else if ( colval < 0.5 ) {
+				myG = 1.0 - ( colvaltimes4 - 1.0 );
+				myB = myG;
+				myG += colvaltimes4 - 1.0;
+			}
+			else if ( colval < 0.75 ) {
+				myR = colvaltimes4 - 2.0;
+				myG = myR;
+				myG += 1.0 - ( colvaltimes4 - 2.0 );
+			}
+			else {
+				myR = 1.0 - ( colvaltimes4 - 3.0 );
+				myG = myR;
+				myR += colvaltimes4 - 3.0;
+			}
+			myR *= 255;
+			myG *= 255;
+			myB *= 255;
+
+//			cout << myR << " - " << myG << " - " << myB << endl;
+
 			if (pTrackParams->momentum().perp() < 0.5) continue;
-			if (fabs(pTrackParams->momentum().x() / pTrackParams->momentum().y()) < 0.2679492)  // SELECTION FOR SECTORS 12, 6, 18, 24
-				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), up*fabs(pTrackParams->momentum().y()), fabs(pTrackParams->momentum().z()), pTrackParams->charge(), pTrack->length());
+//			if (fabs(pTrackParams->momentum().x() / pTrackParams->momentum().y()) < 0.2679492)  // SELECTION FOR SECTORS 12, 6, 18, 24
+//				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), up*fabs(pTrackParams->momentum().y()), fabs(pTrackParams->momentum().z()), pTrackParams->charge(), pTrack->length());
+
+			int myCharge = pTrackParams->charge() == 1 ? 1 : 0;
+
+//			fprintf(svgOutT, "<path d=\"M 0 0 A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge,  o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
 
 			if (phvec.size() < 20) continue; // SELECTION FOR NUMBER OF HITS ON THE TRACK
+			bool doIneedThisTrack = true;
 			for (int hit = 0; hit < phvec.size(); hit++) {
 //				if (hvec[hit]->detector() == kTpcId) {
 					StTpcHit *tpcHit = static_cast<StTpcHit *> (phvec[hit]);
@@ -251,13 +303,37 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //					if (tpcHit->padrow() > 40) fprintf(outFile_TPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 //					else fprintf(outFile_iTPC, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 
-					if (fabs(hitX / hitY) < 0.2679492) // SELECTION FOR SECTORS 12, 6, 18, 24
+					if (fabs(hitX / hitY) < 0.2679492) { // SELECTION FOR SECTORS 12, 6, 18, 24
 						fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, up*fabs(hitY), -1*fabs(hitZ)); // MIRROR IMAGE
-//						fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
+//						fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(255, 0, 0)\" />\n", hitX, hitY);
+						fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke-width=\"0.3\" style=\"fill:rgb(%d, %d, %d); stroke:rgb(200,200,200)\" />\n", hitX, hitY, myR, myG,myB);
+//						fprintf(svgOut_perp, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(255, 0, 0)\" />\n", fabs(hitZ), up*fabs(hitY));
+						fprintf(svgOut_perp, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%d, %d, %d)\" />\n", fabs(hitZ), up*fabs(hitY), myR, myG, myB);
+					}
+					else doIneedThisTrack = false;
+
+//					fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
+//					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(255, 0, 0)\" />\n", hitX, hitY);
 
 //					cout << "[" << hitX << ", " << hitY << ", " << hitZ << "]," << endl;
 //					fprintf(outFile, "%d, %d, %d, %d, %f, %f, %f, %f\n", track, tpcHit->pad(), tpcHit->padrow(), tpcHit->timeBucket(), tpcHit->adc(), hitX, hitY, hitZ);
 //				}
+			}
+
+			if (doIneedThisTrack) {
+				double lastHitX = 200;
+				double lastHitY = 200; 
+				double tanTheta = fabs(pTrackParams->momentum().z() / pTrackParams->momentum().y());
+				printf("%f = %f / %f\n", tanTheta, pTrackParams->momentum().z(), pTrackParams->momentum().y());
+
+				if (tanTheta < 1) lastHitX = tanTheta * 190;
+				else lastHitY = 190 / tanTheta;
+
+
+				fprintf(svgOutT, "<path d=\"M 0 0 A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge,  o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
+
+				fprintf(svgOut_perp, "<line x1=\"0\" y1=\"0\" x2=\"%.2f\" y2=\"%.2f\" style=\"stroke:rgb(%d, %d, %d); stroke-width:0.3\" />\n", -1*lastHitX, up*lastHitY, myR, myG, myB);
+				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), up*fabs(pTrackParams->momentum().y()), fabs(pTrackParams->momentum().z()), pTrackParams->charge(), pTrack->length());
 			}
 #endif
 
@@ -340,6 +416,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(outFile, "[0,0,0]]\n}\n}");
 		fprintf(outFileAll, "[0,0,0]]\n}\n}");
 		fprintf(svgOut, "</svg>");
+		fprintf(svgOutT, "</svg>");
+		fprintf(svgOut_perp, "</svg>");
 		fprintf(svgOutAll, "</svg>");
 		fprintf(outFileT, "{}\n]\n}\n}");
 		fclose(outFile);
