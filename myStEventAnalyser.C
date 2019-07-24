@@ -40,14 +40,19 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 	FILE * svgOut;
 	FILE * svgOutT;
 	FILE * svgOut_perp;
+	FILE * svgOutTracks_perp;
 	FILE * outFileT;
+	FILE * animFile;
+
 	char outFileName[100];
 	char outFileAllName[100];
 	char svgOutFile_perp[100];
+	char svgOutFileTracks_perp[100];
 	char svgOutFile[100];
 	char svgOutFileT[100];
 	char svgOutFileAll[100];
 	char outFileNameT[100];
+	char animFileName[100];
 
 //	const char * file = "st_cosmic_adc_19053068_raw_2000015.event.root";
 	gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
@@ -120,15 +125,20 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		sprintf(svgOutFile, "hits_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFileT, "tracks_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFile_perp, "hits_perp_%d_%d.svg", pEvent->runId(),  pEvent->id());
+		sprintf(svgOutFileTracks_perp, "tracks_perp_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFileAll, "Allhits_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(outFileNameT, "StTracks_%d_%d.json", pEvent->runId(),  pEvent->id());
+		sprintf(animFileName, "animation_%d_%d.svg", pEvent->runId(),  pEvent->id());
+
 		outFile = fopen(outFileName, "w");
 		svgOut = fopen(svgOutFile, "w");
 		svgOutT = fopen(svgOutFileT, "w");
 		svgOut_perp = fopen(svgOutFile_perp, "w");
+		svgOutTracks_perp = fopen(svgOutFileTracks_perp, "w");
 		svgOutAll = fopen(svgOutFileAll, "w");
 		outFileAll = fopen(outFileAllName, "w");
 		outFileT = fopen(outFileNameT, "w");
+		animFile = fopen(animFileName, "w");
 
 //		ADDING HEADER TO THE OUTPUT json FILE
 		fprintf(outFile, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
@@ -143,6 +153,10 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(svgOutAll, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
+		fprintf(animFile, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(animFile, "<script type=\"text/javascript\" href=\"/~iraklic/js/rep.js\" />\n");
+		fprintf(animFile, "<polygon points=\"51.76381,  193.18517,  141.42136,  141.42136,  193.18517,   51.76381,  193.18517,  -51.76381,  141.42136, -141.42136,   51.76381, -193.18517,  -51.76381, -193.18517, -141.42136, -141.42136, -193.18517,  -51.76381, -193.18517,   51.76381, -141.42136,  141.42136,  -51.76381,  193.18517,   51.76381,  193.18517, 141.42136,  141.42136\" style=\"fill:none;stroke:grey;stroke-width:1\" />\n");
+
 		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(svgOut, "<polygon points=\"51.76381,  193.18517,  141.42136,  141.42136,  193.18517,   51.76381,  193.18517,  -51.76381,  141.42136, -141.42136,   51.76381, -193.18517,  -51.76381, -193.18517, -141.42136, -141.42136, -193.18517,  -51.76381, -193.18517,   51.76381, -141.42136,  141.42136,  -51.76381,  193.18517,   51.76381,  193.18517, 141.42136,  141.42136\" style=\"fill:none;stroke:grey;stroke-width:1\" />\n");
 //		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
@@ -152,6 +166,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //		fprintf(svgOutT, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 		fprintf(svgOut_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(svgOutTracks_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 //		fprintf(svgOut_perp, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 
@@ -355,10 +370,12 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 //			Tracks start in the center (0, 0)
 //			fprintf(svgOutT, "<path d=\"M 0 0 A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
 //			Tracks start in where they start
-//			if (pTrackParams->momentum().x() >= 0)
+//			if (pTrackParams->momentum().x() >= 0 && o_pTrackParams->origin().x() >= 0)
 				fprintf(svgOutT, "<path d=\"M %.2f %.2f A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  pTrackParams->origin().x(), pTrackParams->origin().y(), 1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
 
+				fprintf(svgOutTracks_perp, "<line x1=\"%.3f\" y1=\"%.3f\" x2=\"%.2f\" y2=\"%.2f\" style=\"stroke:rgb(%d, %d, %d); stroke-width:0.3\" />\n", pTrackParams->origin().z(), pTrackParams->origin().y(), o_pTrackParams->origin().z(), o_pTrackParams->origin().y(), myR, myG, myB);
 				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), pTrackParams->momentum().y(), fabs(pTrackParams->momentum().z()), pTrackParams->charge(), pTrack->length());
+				fprintf(animFile, "<circle cx=\"0\" cy=\"0\" r=\"2\" fill=\"rgb(%d, %d, %d)\"><animateMotion dur=\"2s\" rotate=\"auto\" repeatCount=\"indefinite\" path=\"M %.2f %.2f A %.2f %.2f, 0, 0, %d, %.2f %.2f\" ><svgr:random attributeName=\"dur\" min=\"1\"  max=\"5\" /><svgr:random attributeName=\"begin\" min=\"0\" max=\"10\" /></animateMotion><svgr:replicate repeatCount=\"0\"  /></circle>\n", myR, myG, myB, pTrackParams->origin().x(), pTrackParams->origin().y(), 1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y());
 #endif
 
 #endif
@@ -460,6 +477,24 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 				<line x1=\"35.3553390593274\" y1=\"35.355339059327\" x2=\" 141.42135623730\" y2=\" 141.42135623731\" style=\"stroke:grey; stroke-width:1\" />\n
 				<line x1=\"48.2962913144534\" y1=\"12.94095225512\" x2=\" 193.18516525781\" y2=\" 51.7638090205041\" style=\"stroke:grey; stroke-width:1\" />\n
 				<polygon points=\"12.940952255126, 48.2962913144534, 35.3553390593274, 35.3553390593274, 48.2962913144534, 12.940952255126, 48.2962913144534, -12.940952255126, 35.3553390593274, -35.3553390593274, 12.940952255126, -48.2962913144534, -12.940952255126, -48.2962913144534, -35.3553390593274, -35.3553390593274, -48.2962913144534, -12.9409522551261, -48.2962913144534, 12.940952255126, -35.3553390593274, 35.3553390593274, -12.940952255126, 48.2962913144534, 12.940952255126, 48.2962913144534, 35.3553390593274, 35.3553390593274\" style=\"fill:url(#TIFC);stroke:grey;stroke-width:1\" />\n</svg>");
+
+		fprintf(animFile, "<line x1=\"12.940952255126\" y1=\"48.296291314453\" x2=\" 51.763809020504\" y2=\" 193.185165257814\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"35.3553390593274\" y1=\"35.355339059327\" x2=\" 141.4213562373\" y2=\" 141.421356237309\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"48.2962913144534\" y1=\"12.94095225512\" x2=\" 193.18516525781\" y2=\" 51.7638090205041\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"48.2962913144534\" y1=\"-12.94095225512\" x2=\" 193.18516525781\" y2=\" -51.7638090205041\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"35.3553390593274\" y1=\"-35.355339059327\" x2=\" 141.4213562373\" y2=\" -141.421356237309\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"12.940952255126\" y1=\"-48.296291314453\" x2=\" 51.763809020504\" y2=\" -193.185165257814\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"-12.940952255126\" y1=\"-48.296291314453\" x2=\" -51.763809020504\" y2=\" -193.185165257814\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"-35.3553390593274\" y1=\"-35.355339059327\" x2=\" -141.42135623730\" y2=\" -141.42135623731\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"-48.2962913144534\" y1=\"-12.940952255126\" x2=\" -193.18516525781\" y2=\" -51.7638090205042\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"-48.2962913144534\" y1=\"12.94095225512\" x2=\" -193.18516525781\" y2=\" 51.7638090205042\" style=\"stroke:grey; stroke-width:1\" />\n");
+		fprintf(animFile, "<line x1=\"-35.3553390593274\" y1=\"35.355339059327\" x2=\" -141.4213562373\" y2=\" 141.421356237309\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"-12.940952255126\" y1=\"48.296291314453\" x2=\" -51.763809020504\" y2=\" 193.185165257814\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"12.940952255126\" y1=\"48.296291314453\" x2=\" 51.763809020504\" y2=\" 193.185165257814\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"35.3553390593274\" y1=\"35.355339059327\" x2=\" 141.42135623730\" y2=\" 141.42135623731\" style=\"stroke:grey; stroke-width:1\" />\n
+				<line x1=\"48.2962913144534\" y1=\"12.94095225512\" x2=\" 193.18516525781\" y2=\" 51.7638090205041\" style=\"stroke:grey; stroke-width:1\" />\n
+				<polygon points=\"12.940952255126, 48.2962913144534, 35.3553390593274, 35.3553390593274, 48.2962913144534, 12.940952255126, 48.2962913144534, -12.940952255126, 35.3553390593274, -35.3553390593274, 12.940952255126, -48.2962913144534, -12.940952255126, -48.2962913144534, -35.3553390593274, -35.3553390593274, -48.2962913144534, -12.9409522551261, -48.2962913144534, 12.940952255126, -35.3553390593274, 35.3553390593274, -12.940952255126, 48.2962913144534, 12.940952255126, 48.2962913144534, 35.3553390593274, 35.3553390593274\" style=\"fill:url(#TIFC);stroke:grey;stroke-width:1\" />\n</svg>");
+
 //		fprintf(svgOut, "</svg>");
 
 		fprintf(svgOutT, "<line x1=\"12.940952255126\" y1=\"48.296291314453\" x2=\" 51.763809020504\" y2=\" 193.185165257814\" style=\"stroke:grey; stroke-width:1\" />\n
@@ -481,9 +516,14 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 //		fprintf(svgOutT, "</svg>");
 		fprintf(svgOut_perp, "</svg>");
+		fprintf(svgOutTracks_perp, "</svg>");
 		fprintf(svgOutAll, "</svg>");
 		fprintf(outFileT, "{}\n]\n}\n}");
+
+		fclose(svgOut_perp);
+		fclose(svgOutTracks_perp);
 		fclose(outFile);
 		fclose(outFileT);
+		fclose(animFile);
 	} // Event Loop
 }
