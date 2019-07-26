@@ -37,6 +37,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 	FILE * outFile;
 	FILE * outFileAll;
 	FILE * svgOutAll;
+	FILE * svgOutAll_perp;
 	FILE * svgOut;
 	FILE * svgOutT;
 	FILE * svgOut_perp;
@@ -51,6 +52,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 	char svgOutFile[100];
 	char svgOutFileT[100];
 	char svgOutFileAll[100];
+	char svgOutFileAll_perp[100];
 	char outFileNameT[100];
 	char animFileName[100];
 
@@ -127,6 +129,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		sprintf(svgOutFile_perp, "hits_perp_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFileTracks_perp, "tracks_perp_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFileAll, "Allhits_%d_%d.svg", pEvent->runId(),  pEvent->id());
+		sprintf(svgOutFileAll_perp, "Allhits_perp_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(outFileNameT, "StTracks_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(animFileName, "animation_%d_%d.svg", pEvent->runId(),  pEvent->id());
 
@@ -136,6 +139,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		svgOut_perp = fopen(svgOutFile_perp, "w");
 		svgOutTracks_perp = fopen(svgOutFileTracks_perp, "w");
 		svgOutAll = fopen(svgOutFileAll, "w");
+		svgOutAll_perp = fopen(svgOutFileAll_perp, "w");
 		outFileAll = fopen(outFileAllName, "w");
 		outFileT = fopen(outFileNameT, "w");
 		animFile = fopen(animFileName, "w");
@@ -152,6 +156,8 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(svgOutAll, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
+
+		fprintf(svgOutAll_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 
 		fprintf(animFile, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
 		fprintf(animFile, "<script type=\"text/javascript\" href=\"/~iraklic/js/rep.js\" />\n");
@@ -203,9 +209,10 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 						fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 //					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" fill=\"#01879f\" />", tpcHit->position().x(), tpcHit->position().y());
 
-					const char * hitColor[6] = {"225, 239, 95", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "225, 0, 0"};
+					const char * hitColor[6] = {"225, 0, 0", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "125, 125, 125"};
 					int hitFlag = tpcHit->flag() > 5 ? 5 :  tpcHit->flag();
 					fprintf(svgOutAll, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().x(), tpcHit->position().y(), hitColor[hitFlag]);
+					fprintf(svgOutAll_perp, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().z(), tpcHit->position().y(), hitColor[hitFlag]);
 					}
 				}
 			} // Loop over rows in sector 20
@@ -518,6 +525,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(svgOut_perp, "</svg>");
 		fprintf(svgOutTracks_perp, "</svg>");
 		fprintf(svgOutAll, "</svg>");
+		fprintf(svgOutAll_perp, "</svg>");
 		fprintf(outFileT, "{}\n]\n}\n}");
 
 		fclose(svgOut_perp);
