@@ -34,6 +34,9 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 //	map<int, vector<hitContainer> > myHits;
 
+	FILE * dataOut;
+	FILE * hitMap;
+
 	FILE * outFile;
 	FILE * outFileAll;
 	FILE * svgOutAll;
@@ -44,6 +47,9 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 	FILE * svgOutTracks_perp;
 	FILE * outFileT;
 	FILE * animFile;
+
+	char dataOutName[100];
+	char hitMapName[100];
 
 	char outFileName[100];
 	char outFileAllName[100];
@@ -67,6 +73,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 //	LOOP OVER EVENTS
 	int printCounter = 0;
+
 	for (int event = 0; event < numberOfEvents; event++) {
 		int iMake = chain->MakeEvent();
 		if (iMake % 10 == kStEOF || iMake % 10==kStFatal) {
@@ -122,6 +129,9 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		}
 
 		cout << " -=- * * * Event: Run "<< pEvent->runId() << " Event No: " << pEvent->id() << " * * * -=-" << endl;
+		sprintf(dataOutName, "data_%d_%d.csv", pEvent->runId(),  pEvent->id());
+		sprintf(hitMapName, "hitMap.csv");
+
 		sprintf(outFileName, "StEvent_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(outFileAllName, "AllHits_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(svgOutFile, "hits_%d_%d.svg", pEvent->runId(),  pEvent->id());
@@ -132,6 +142,10 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		sprintf(svgOutFileAll_perp, "Allhits_perp_%d_%d.svg", pEvent->runId(),  pEvent->id());
 		sprintf(outFileNameT, "StTracks_%d_%d.json", pEvent->runId(),  pEvent->id());
 		sprintf(animFileName, "animation_%d_%d.svg", pEvent->runId(),  pEvent->id());
+
+		dataOut = fopen(dataOutName, "w");
+		hitMap = fopen(hitMapName, "w");
+
 
 		outFile = fopen(outFileName, "w");
 		svgOut = fopen(svgOutFile, "w");
@@ -145,6 +159,10 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		animFile = fopen(animFileName, "w");
 
 //		ADDING HEADER TO THE OUTPUT json FILE
+
+		fprintf(dataOut, "xi, yi, zi, xf, yf, zf, px, py, pz, r, g, b,  c, curv, pt\n");
+		fprintf(hitMap, "sector, row, padMin, padMax, adc, x, y\n");
+
 		fprintf(outFile, "{\"EVENT\": {\"R\": %d, \"Evt\": %d, \"B\": 0.5, \"tm\": 1528087733},", pEvent->runId(), pEvent->id());
 		fprintf(outFile, "\"META\": {\n\"HITS\": {\"TPC\": {\"type\": \"3D\", \"options\": {\"size\": 5, \"color\": 100255}}},\n\"TRACKS\": {\"type\": \"3D\", \"tracks\": {\"size\":5, \"r_min\": 0, \"r_max\": 2000 }}\n},\n");
 		fprintf(outFile, "\"HITS\": {\"TPC\": [\n");
@@ -154,25 +172,26 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(outFileAll, "\"HITS\": {\"TPC\": [\n");
 
 
-		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(svgOutAll, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(-1, -1)\">\n");
 		fprintf(svgOutAll, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
-		fprintf(svgOutAll_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(svgOutAll_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(-1, -1)\">\n");
 
-		fprintf(animFile, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(animFile, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(-1, -1)\">\n");
 		fprintf(animFile, "<script type=\"text/javascript\" href=\"/~iraklic/js/rep.js\" />\n");
 		fprintf(animFile, "<polygon points=\"51.76381,  193.18517,  141.42136,  141.42136,  193.18517,   51.76381,  193.18517,  -51.76381,  141.42136, -141.42136,   51.76381, -193.18517,  -51.76381, -193.18517, -141.42136, -141.42136, -193.18517,  -51.76381, -193.18517,   51.76381, -141.42136,  141.42136,  -51.76381,  193.18517,   51.76381,  193.18517, 141.42136,  141.42136\" style=\"fill:none;stroke:grey;stroke-width:1\" />\n");
 
-		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(svgOut, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(-1, -1)\">\n");
 		fprintf(svgOut, "<polygon points=\"51.76381,  193.18517,  141.42136,  141.42136,  193.18517,   51.76381,  193.18517,  -51.76381,  141.42136, -141.42136,   51.76381, -193.18517,  -51.76381, -193.18517, -141.42136, -141.42136, -193.18517,  -51.76381, -193.18517,   51.76381, -141.42136,  141.42136,  -51.76381,  193.18517,   51.76381,  193.18517, 141.42136,  141.42136\" style=\"fill:none;stroke:grey;stroke-width:1\" />\n");
 //		fprintf(svgOut, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
-		fprintf(svgOutT, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(svgOutT, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(-1, -1)\">\n");
 		fprintf(svgOutT, "<polygon points=\"51.76381,  193.18517,  141.42136,  141.42136,  193.18517,   51.76381,  193.18517,  -51.76381,  141.42136, -141.42136,   51.76381, -193.18517,  -51.76381, -193.18517, -141.42136, -141.42136, -193.18517,  -51.76381, -193.18517,   51.76381, -141.42136,  141.42136,  -51.76381,  193.18517,   51.76381,  193.18517, 141.42136,  141.42136\" style=\"fill:none;stroke:grey;stroke-width:1\" />\n");
+		fprintf(svgOutT, " <filter id=\"blurMe\"><feGaussianBlur stdDeviation=\"5\"/></filter>\n");
 //		fprintf(svgOutT, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
-		fprintf(svgOut_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
-		fprintf(svgOutTracks_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(1, -1)\">\n");
+		fprintf(svgOut_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(-1, -1)\">\n");
+		fprintf(svgOutTracks_perp, "<svg\n\txmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n\t\txmlns:svg=\"http://www.w3.org/2000/svg\"\n\txmlns=\"http://www.w3.org/2000/svg\"\n\tviewBox=\"-205 -205 410 410\"\n\twidth=\"410\"\n\theight=\"410\"\n\tstyle=\"background-color: rgb(0, 0, 0);\"\n\t transform=\"scale(-1, -1)\">\n");
 //		fprintf(svgOut_perp, "<circle cx=\"0\" cy=\"0\" r=\"200\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n<circle cx=\"0\" cy=\"0\" r=\"50\" stroke-width=\"1\" style=\"stroke:rgb(255, 255, 255)\" />\n");
 
 
@@ -198,21 +217,24 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 						const StTpcHit * tpcHit = static_cast<const StTpcHit *> (hits[hit]);
 						if (tpcHit->flag() == 0) NoHits++;
 						NoBadHits++;
-//					cout << "tpcHit : " << pEvent->id() << " : " << tpcHit->flag() << ", " <<  tpcHit->pad() << ", " << tpcHit->padrow() << ", " << tpcHit->timeBucket() << ", " << tpcHit->adc() << ", " << tpcHit->position().x() << ", " << tpcHit->position().y() << ", " << tpcHit->position().z() << endl;
-//					printf("tpcHit : %d : %d : %d : %d : %.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", pEvent->id(), tpcHit->flag(), sec + 1, tpcHit->padrow(), tpcHit->pad(), tpcHit->timeBucket(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
-//					tempHit.hitx =  tpcHit->position().x();
-//					tempHit.hity =  tpcHit->position().y();
-//					tempHit.hitz =  tpcHit->position().z();
-//					tempHit.adc =  tpcHit->adc();
-//					myHits[tpcHit->flag()].push_back(tempHit);
-//					if (tpcHit->position().x() >= 0)
-						fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
-//					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" fill=\"#01879f\" />", tpcHit->position().x(), tpcHit->position().y());
 
-					const char * hitColor[6] = {"225, 0, 0", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "125, 125, 125"};
-					int hitFlag = tpcHit->flag() > 5 ? 5 :  tpcHit->flag();
-					fprintf(svgOutAll, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().x(), tpcHit->position().y(), hitColor[hitFlag]);
-					fprintf(svgOutAll_perp, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().z(), tpcHit->position().y(), hitColor[hitFlag]);
+						fprintf(hitMap, "%d, %d, %d, %d, %f, %.2f, %.2fN\n", sec, row, tpcHit->minPad(), tpcHit->maxPad(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y());
+
+//						cout << "tpcHit : " << pEvent->id() << " : " << tpcHit->flag() << ", " <<  tpcHit->pad() << ", " << tpcHit->padrow() << ", " << tpcHit->timeBucket() << ", " << tpcHit->adc() << ", " << tpcHit->position().x() << ", " << tpcHit->position().y() << ", " << tpcHit->position().z() << endl;
+//						printf("tpcHit : %d : %d : %d : %d : %.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n", pEvent->id(), tpcHit->flag(), sec + 1, tpcHit->padrow(), tpcHit->pad(), tpcHit->timeBucket(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
+//						tempHit.hitx =  tpcHit->position().x();
+//						tempHit.hity =  tpcHit->position().y();
+//						tempHit.hitz =  tpcHit->position().z();
+//						tempHit.adc =  tpcHit->adc();
+//						myHits[tpcHit->flag()].push_back(tempHit);
+//						if (tpcHit->position().x() >= 0)
+						fprintf(outFileAll, "[%.2f, %.2f, %.2f],\n", tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
+//						fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"1\" stroke=\"none\" stroke-width=\"1\" fill=\"#01879f\" />", tpcHit->position().x(), tpcHit->position().y());
+
+						const char * hitColor[6] = {"225, 0, 0", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "125, 125, 125"};
+						int hitFlag = tpcHit->flag() > 5 ? 5 :  tpcHit->flag();
+						fprintf(svgOutAll, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().x(), tpcHit->position().y(), hitColor[hitFlag]);
+						fprintf(svgOutAll_perp, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%s)\" />\n", tpcHit->position().z(), tpcHit->position().y(), hitColor[hitFlag]);
 					}
 				}
 			} // Loop over rows in sector 20
@@ -255,18 +277,26 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 		StTrackNode * node = 0;
 		cout << "Number of tracks : " << nTracks << endl;
+
+
+//		nTracks = 10;
+//		cout << "I am only going to draw first " << nTracks << endl;
+
 		for (int track = 0; track < nTracks; track++) {
 			node = trackNode[track];
 			if (!node) {cout << "NO NODE" << endl; continue;}
 
-//			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(global));
-			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
+			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(global));
+//			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
 			if (!pTrack) continue;
 			if (! pTrack->detectorInfo()) {cout << "=============== detectorInfo is missing" << endl; continue;}
 			StPtrVecHit phvec = pTrack->detectorInfo()->hits();
 			StTrackGeometry * pTrackParams = pTrack->geometry();
 			StTrackGeometry * o_pTrackParams = pTrack->outerGeometry();
 			if (!pTrackParams) {cout << "-=- No track params for primary track -=-" << endl; continue;}
+
+//			if (pTrack->idTruth() != 8) continue;
+//			cout << pTrack->idTruth() << endl;
 
 			int up = -1; // 1 is vertically up y > 0 and -1 is vertically down y < 0
 #if 1 
@@ -310,7 +340,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 //			if (pTrackParams->momentum().perp() < 0.4) continue;
 
-			int myCharge = pTrackParams->charge() == 1 ? 0 : 1;
+			int myCharge = pTrackParams->charge() == 1 ? 1 : 0;
 
 //			if (phvec.size() < 20) continue; // SELECTION FOR NUMBER OF HITS ON THE TRACK
 			bool doIneedThisTrack = true;
@@ -346,7 +376,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 						fprintf(svgOut_perp, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(%d, %d, %d)\" />\n", hitZ, hitY, myR, myG, myB);
 #endif
 
-//					fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
+					fprintf(outFile, "[%.2f, %.2f, %.2f],\n", hitX, hitY, hitZ);
 //					fprintf(svgOut, "<circle cx=\"%.2f\" cy=\"%.2f\" r=\"0.5\" stroke=\"none\" stroke-width=\"1\" style=\"fill:rgb(255, 0, 0)\" />\n", hitX, hitY);
 
 //					cout << "[" << hitX << ", " << hitY << ", " << hitZ << "]," << endl;
@@ -375,14 +405,47 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 				fprintf(svgOutT, "<path d=\"M 0 0 A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
 #else
 //			Tracks start in the center (0, 0)
-//			fprintf(svgOutT, "<path d=\"M 0 0 A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
+			fprintf(svgOutT, "<path d=\"M 0 0 A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
 //			Tracks start in where they start
 //			if (pTrackParams->momentum().x() >= 0 && o_pTrackParams->origin().x() >= 0)
-				fprintf(svgOutT, "<path d=\"M %.2f %.2f A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"1\" style=\"stroke:rgb(%d, %d, %d)\"></path>\n",  pTrackParams->origin().x(), pTrackParams->origin().y(), 1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), myR, myG, myB);
+//
+				double thickness = (o_pTrackParams->origin().z() + 410) * 4/410;
+				thickness = thickness < 0 ? 0 : thickness;
+				if (pTrackParams->momentum().z() < 0) thickness = TMath::Abs(o_pTrackParams->origin().z()) *0.5 / 200 ;
+				double length = TMath::Sqrt(o_pTrackParams->origin().x() * o_pTrackParams->origin().x() + o_pTrackParams->origin().y() * o_pTrackParams->origin().y());
+				double segmentLength = pTrackParams->momentum().perp() * 40/2;
+				double segmentLength1 = (o_pTrackParams->origin().z() + 410) * segmentLength/410;
+
+				fprintf(dataOut, "%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, %d, %d, %.2f, %.2f\n",
+						pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(),
+						o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), o_pTrackParams->origin().z(),
+						pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(),
+						myR, myG,myB, 
+						myCharge, 1/pTrackParams->curvature(), pTrackParams->momentum().perp());
+
+
+//				fprintf(svgOutT, "<path filter=\"url(#blurMe)\" d=\"M %.2f %.2f A %.2f %.2f, 0, 0, %d, %.2f %.2f \" fill=\"none\" stroke-width=\"%.2f\" style=\"stroke:rgb(%d, %d, %d)\" opacity=\"0.7\" stroke-dasharray=\"%.2f %.2f\" stroke-dashoffset=\"%.2f\"></path>\n",
+//						pTrackParams->origin().x(), pTrackParams->origin().y(), 1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), thickness, myR, myG, myB, segmentLength1, length - segmentLength1, segmentLength1);
 
 				fprintf(svgOutTracks_perp, "<line x1=\"%.3f\" y1=\"%.3f\" x2=\"%.2f\" y2=\"%.2f\" style=\"stroke:rgb(%d, %d, %d); stroke-width:0.3\" />\n", pTrackParams->origin().z(), pTrackParams->origin().y(), o_pTrackParams->origin().z(), o_pTrackParams->origin().y(), myR, myG, myB);
-				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), pTrackParams->momentum().y(), fabs(pTrackParams->momentum().z()), pTrackParams->charge(), pTrack->length());
-				fprintf(animFile, "<circle cx=\"0\" cy=\"0\" r=\"2\" fill=\"rgb(%d, %d, %d)\"><animateMotion dur=\"2s\" rotate=\"auto\" repeatCount=\"indefinite\" path=\"M %.2f %.2f A %.2f %.2f, 0, 0, %d, %.2f %.2f\" ><svgr:random attributeName=\"dur\" min=\"1\"  max=\"5\" /><svgr:random attributeName=\"begin\" min=\"0\" max=\"10\" /></animateMotion><svgr:replicate repeatCount=\"0\"  /></circle>\n", myR, myG, myB, pTrackParams->origin().x(), pTrackParams->origin().y(), 1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y());
+				fprintf(outFileT, "{\"pt\": %.3f,\"xyz\":[%.3f, %.3f, %.3f], \"pxyz\":[%.3f, %.3f, %.3f], \"q\": %d,\"l\": %.3f,\"nh\":20},\n", pTrackParams->momentum().perp(),  pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(), pTrackParams->momentum().x(), pTrackParams->momentum().y(), pTrackParams->momentum().z(), pTrackParams->charge(), pTrack->length());
+
+				for (int trailer = 0; trailer < 5; trailer++) {
+					double time = trailer*0.05 + 0.05;
+					double opacity[] = {1, 0.7, 0.5, 0.3, 0.1};
+					double radii[] = {1, 0.8, 0.6, 0.4, 0.2};
+					if (trailer < 4)
+						fprintf(animFile, "<circle cx=\"0\" cy=\"0\" r=\"%.f\" fill=\"rgb(%d, %d, %d)\" opacity=\"%f\">
+							<animateMotion begin=\"%.3f\" dur=\"2s\" rotate=\"auto\" fill=\"freeze\" path=\"M %.2f %.2f A %.2f %.2f, 0, 0, %d, %.2f %.2f\" >
+							</animateMotion>
+							</circle>\n", radii[trailer], myR, myG, myB, opacity[trailer],
+							time, pTrackParams->origin().x(), pTrackParams->origin().y(), 1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y());
+					else 
+						fprintf(animFile, "<ellipse cx=\"0\" cy=\"0\" xr=\"10\" yr=\"1\" fill=\"rgb(%d, %d, %d)\" opacity=\"%f\">
+								<animateMotion begin=\"%.3f\" dur=\"2s\" rotate=\"auto\" fill=\"freeze\" path=\"M %.2f %.2f A %.2f %.2f, 0, 0, %d, %.2f %.2f\" >
+								</animateMotion>
+								</ellipse>\n", myR, myG, myB, opacity[trailer], time, pTrackParams->origin().x(), pTrackParams->origin().y(), 1/pTrackParams->curvature(), 1/pTrackParams->curvature(), myCharge, o_pTrackParams->origin().x(), o_pTrackParams->origin().y());
+				}
 #endif
 
 #endif
@@ -463,6 +526,7 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 #endif		
 
 		}
+
 		fprintf(outFile, "[0,0,0]]\n}\n}");
 		fprintf(outFileAll, "[0,0,0]]\n}\n}");
 
@@ -528,10 +592,12 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		fprintf(svgOutAll_perp, "</svg>");
 		fprintf(outFileT, "{}\n]\n}\n}");
 
+		fclose(dataOut);
 		fclose(svgOut_perp);
 		fclose(svgOutTracks_perp);
 		fclose(outFile);
 		fclose(outFileT);
 		fclose(animFile);
 	} // Event Loop
+	fclose(hitMap);
 }
