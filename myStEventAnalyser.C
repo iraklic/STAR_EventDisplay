@@ -12,33 +12,38 @@
 	} ;
 */
 using namespace std;
-void myStEventAnalyser(const int numberOfEvents, const char * file, const int eventToSelect = -1, const char * eventsFile = "") {
+void myStEventAnalyser(int numberOfEvents, const char * file, int eventToSelect = -1, const char * eventsFile = "") {
 	cout << file << " to be analyzed" << endl;
 	cout << eventToSelect << " to be selected" << endl;
-	cout << eventsFile << " will be checked for events to work with" << endl;
 
-//	vector<int> eventVec; // vector for events to display
-/*
+	vector<int> eventVec; // vector for events to display
+
 	FILE * inEvents;
-	inEvents = fopen(eventsFile, "r");
-	while (!feof (inEvents)) {
-		char eventFromFile[100];
-		if ( fgets (eventFromFile, 100 , inEvents) == NULL ) break;
-		fputs (eventFromFile, stdout);
-		cout << eventFromFile << endl;
-//		eventVec.push_back(atoi(eventFromFile));
+	if (eventsFile != "") {
+		cout << eventsFile << " will be checked for events to work with" << endl;
+		inEvents = fopen(eventsFile, "r");
+		while (!feof (inEvents)) {
+			char eventFromFile[100];
+			if ( fgets (eventFromFile, 100 , inEvents) == NULL ) break;
+			eventVec.push_back(atoi(eventFromFile));
+		}
+		fclose (inEvents);
+		cout << "There is a whole file from which I'll pick interesting events!" << endl;
+		numberOfEvents = eventVec.size();
 	}
-	fclose (inEvents);
-*/
+	
+
 //	hitContainer tempHit;
 
 //	map<int, vector<hitContainer> > myHits;
 
 	FILE * dataOut;
 	FILE * hitMap;
+	FILE * hitsOnTracks;
 
 	char dataOutName[100];
 	char hitMapName[100];
+	char hitsOnTracksName[100];
 
 //	const char * file = "st_cosmic_adc_19053068_raw_2000015.event.root";
 	gROOT->LoadMacro("$STAR/StRoot/StMuDSTMaker/COMMON/macros/loadSharedLibraries.C");
@@ -51,6 +56,11 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 
 //	LOOP OVER EVENTS
 	int printCounter = 0;
+
+	sprintf(hitsOnTracksName, "hitsOnTracks.csv", file);
+	hitsOnTracks = fopen(hitsOnTracksName, "w");
+	cout << hitsOnTracks << "-------------------------------" << endl;
+	fprintf(hitsOnTracks, "x, y, z, r, g, b, eventId\n");
 
 	for (int event = 0; event < numberOfEvents; event++) {
 		int iMake = chain->MakeEvent();
@@ -85,10 +95,15 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		}
 # endif
 
+
+		if (eventsFile != "") eventToSelect = eventVec.at(event);
+
 		if (eventToSelect != -1 && pEvent->id() != eventToSelect) {
-				event--;
-			       	continue; // event selector condition
-			}
+			cout << eventToSelect << " ---------------------------- " << endl;
+			event--;
+			if (eventToSelect < pEvent->id()) event++;
+		       	continue; // event selector condition
+		}
 
 		StTpcHitCollection* TpcHitCollection = pEvent->tpcHitCollection();
 		if (!TpcHitCollection) {
@@ -148,35 +163,35 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 		StTrackNode * node = 0;
 		cout << "Number of tracks : " << nTracks << endl;
 
-		for (int track = 0; track < nTracks; track++) {
-			node = trackNode[track];
+		for (int trackNumber = 0; trackNumber < nTracks; trackNumber++) {
+			node = trackNode[trackNumber];
 			if (!node) {
 				cout << "NO NODE" << endl;
 				continue;
 			}
 
-//			StGlobalTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(global));
-			StPrimaryTrack* pTrack = static_cast<StPrimaryTrack*>(node->track(primary));
-			if (!pTrack) continue;
-			if (! pTrack->detectorInfo()) {cout << "=============== detectorInfo is missing" << endl; continue;}
+			StGlobalTrack* track = static_cast<StGlobalTrack*>(node->track(global));
+//			StPrimaryTrack* track = static_cast<StPrimaryTrack*>(node->track(primary));
+			if (!track) continue;
+			if (! track->detectorInfo()) {cout << "=============== detectorInfo is missing" << endl; continue;}
 
-			StPtrVecHit phvec = pTrack->detectorInfo()->hits();
-			StTrackGeometry * pTrackParams = pTrack->geometry();
-			StTrackGeometry * o_pTrackParams = pTrack->outerGeometry();
-			if (!pTrackParams) {cout << "-=- No track params for primary track -=-" << endl; continue;}
+			StPtrVecHit phvec = track->detectorInfo()->hits();
+			StTrackGeometry * trackParams = track->geometry();
+			StTrackGeometry * o_trackParams = track->outerGeometry();
+			if (!trackParams) {cout << "-=- No track params for primary track -=-" << endl; continue;}
 
 //			CUTS ------------------------------------------
-			if (pTrackParams->momentum().pseudoRapidity() > 0.5) continue;
+			if (trackParams->momentum().pseudoRapidity() > 0.5) continue;
 //			CUTS ------------------------------------------
 
-//			if (pTrack->idTruth() != 8) continue;
-//			cout << pTrack->idTruth() << endl;
+//			if (track->idTruth() != 8) continue;
+//			cout << track->idTruth() << endl;
 
 			int up = -1; // 1 is vertically up y > 0 and -1 is vertically down y < 0
 
 //			BELOW IS THE COLOR SETUP FOR THE HITS ON THE TRACK ACCORDING TO THE STAR COLOR SCHEME
 			double int myR, myG, myB;
-			double trackP = pTrackParams->momentum().perp();
+			double trackP = trackParams->momentum().perp();
 			double maxP = 4.5;
 			double colval = trackP < maxP ? trackP / maxP : 1;
 			double colvaltimes4 = colval * 4.0;
@@ -205,10 +220,11 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 			myG *= 255;
 			myB *= 255;
 
-			int myCharge = pTrackParams->charge() == 1 ? 1 : 0;
+			int myCharge = trackParams->charge() == 1 ? 1 : 0;
 
 //			if (phvec.size() < 20) continue; // SELECTION FOR NUMBER OF HITS ON THE TRACK
 			bool doIneedThisTrack = true;
+//			cout << "Number of hits on this track : " << phvec.size() << endl;
 			for (int hit = 0; hit < phvec.size(); hit++) {
 //				if (hvec[hit]->detector() == kTpcId) {
 					StTpcHit *tpcHit = static_cast<StTpcHit *> (phvec[hit]);
@@ -220,24 +236,26 @@ void myStEventAnalyser(const int numberOfEvents, const char * file, const int ev
 					float hitX = tpcHit->position().x();
 					float hitY = tpcHit->position().y();
 					float hitZ = tpcHit->position().z();
-
+					
+					fprintf(hitsOnTracks, "%.2f, %.2f, %.2f, %d, %d, %d, %d\n", hitX, hitY, hitZ, myR, myG, myB, pEvent->id());
 			}
 
-			double thickness = (o_pTrackParams->origin().z() + 410) * 4/410;
+			double thickness = (o_trackParams->origin().z() + 410) * 4/410;
 			thickness = thickness < 0 ? 0 : thickness;
-			if (pTrackParams->momentum().z() < 0) thickness = TMath::Abs(o_pTrackParams->origin().z()) *0.5 / 200 ;
-			double length = TMath::Sqrt(o_pTrackParams->origin().x() * o_pTrackParams->origin().x() + o_pTrackParams->origin().y() * o_pTrackParams->origin().y());
-			double segmentLength = pTrackParams->momentum().perp() * 40/2;
-			double segmentLength1 = (o_pTrackParams->origin().z() + 410) * segmentLength/410;
+			if (trackParams->momentum().z() < 0) thickness = TMath::Abs(o_trackParams->origin().z()) *0.5 / 200 ;
+			double length = TMath::Sqrt(o_trackParams->origin().x() * o_trackParams->origin().x() + o_trackParams->origin().y() * o_trackParams->origin().y());
+			double segmentLength = trackParams->momentum().perp() * 40/2;
+			double segmentLength1 = (o_trackParams->origin().z() + 410) * segmentLength/410;
 
 			fprintf(dataOut, "%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, %d, %d, %.2f, %.2f\n",
-					pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(),
-					o_pTrackParams->origin().x(), o_pTrackParams->origin().y(), o_pTrackParams->origin().z(),
-					pTrackParams->origin().x(), pTrackParams->origin().y(), pTrackParams->origin().z(),
+					trackParams->origin().x(), trackParams->origin().y(), trackParams->origin().z(),
+					o_trackParams->origin().x(), o_trackParams->origin().y(), o_trackParams->origin().z(),
+					trackParams->origin().x(), trackParams->origin().y(), trackParams->origin().z(),
 					myR, myG,myB, 
-					myCharge, 1/pTrackParams->curvature(), pTrackParams->momentum().perp());
+					myCharge, 1/trackParams->curvature(), trackParams->momentum().perp());
 		}
 		fclose(dataOut);
+		fclose(hitMap);
 	} // Event Loop
-	fclose(hitMap);
+	fclose(hitsOnTracks);
 }
