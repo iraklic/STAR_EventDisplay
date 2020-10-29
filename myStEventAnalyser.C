@@ -54,14 +54,25 @@ void myStEventAnalyser(int numberOfEvents, const char * file, int eventToSelect 
 //	TString Chain("StEvent, nodefault, mysql, in, quiet");
 	bfc(0, Chain, file); // This will make chain
 
+//	PREPARE OUTPUT FILES
+	const char * fBaseName = gSystem->BaseName(file);
+	TString fBaseN(fBaseName);
+	fBaseN.ReplaceAll(".event.root", "");
+
+	sprintf(hitsOnTracksName, "%s_hitsOnTracks.csv", fBaseN.Data());
+	hitsOnTracks = fopen(hitsOnTracksName, "w");
+	fprintf(hitsOnTracks, "eventId, track, flag, sector, padrow, padMin, padMax, adc, x, y, z, r, g, b\n");
+
+	sprintf(dataOutName, "%s_tracks.csv", fBaseN.Data());
+	dataOut = fopen(dataOutName, "w");
+	fprintf(dataOut, "eventId, track, xi, yi, zi, xf, yf, zf, px, py, pz, r, g, b, c, curv, pt, length\n");
+
+	sprintf(hitMapName, "%s_hitMap.csv", fBaseN.Data());
+	hitMap = fopen(hitMapName, "w");
+	fprintf(hitMap, "eventId, sector, row, padMin, padMax, adc, x, y, z\n");
+
 //	LOOP OVER EVENTS
 	int printCounter = 0;
-
-	sprintf(hitsOnTracksName, "hitsOnTracks.csv", file);
-	hitsOnTracks = fopen(hitsOnTracksName, "w");
-	cout << hitsOnTracks << "-------------------------------" << endl;
-	fprintf(hitsOnTracks, "x, y, z, r, g, b, eventId\n");
-
 	for (int event = 0; event < numberOfEvents; event++) {
 		int iMake = chain->MakeEvent();
 		if (iMake % 10 == kStEOF || iMake % 10==kStFatal) {
@@ -112,16 +123,6 @@ void myStEventAnalyser(int numberOfEvents, const char * file, int eventToSelect 
 		}
 
 		cout << " -=- * * * Event: Run "<< pEvent->runId() << " Event No: " << pEvent->id() << " * * * -=-" << endl;
-		sprintf(dataOutName, "data_%d_%d.csv", pEvent->runId(),  pEvent->id());
-		sprintf(hitMapName, "hitMap_%d_%d.csv", pEvent->runId(),  pEvent->id());
-
-
-		dataOut = fopen(dataOutName, "w");
-		hitMap = fopen(hitMapName, "w");
-
-//		ADDING HEADER TO THE OUTPUT FILES
-		fprintf(dataOut, "xi, yi, zi, xf, yf, zf, px, py, pz, r, g, b,  c, curv, pt\n");
-		fprintf(hitMap, "sector, row, padMin, padMax, adc, x, y\n");
 
 //		All hits and sector loop below ==============================
 		for (int sec = 0; sec < 24; sec++) {
@@ -145,14 +146,22 @@ void myStEventAnalyser(int numberOfEvents, const char * file, int eventToSelect 
 						if (tpcHit->flag() == 0) NoHits++;
 						NoBadHits++;
 
-						fprintf(hitMap, "%d, %d, %d, %d, %f, %.2f, %.2f\n", sec, row, tpcHit->minPad(), tpcHit->maxPad(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y());
-
-						const char * hitColor[6] = {"225, 0, 0", "0, 255, 0", "0, 0, 255", "225, 100, 100" , "225, 239, 95", "125, 125, 125"};
-						int hitFlag = tpcHit->flag() > 5 ? 5 :  tpcHit->flag();
+						fprintf(hitMap, "%d, %d, %d, %d, %d, %f, %.2f, %.2f, %.2f\n", pEvent->id(), sec, row, tpcHit->minPad(), tpcHit->maxPad(), tpcHit->adc(), tpcHit->position().x(), tpcHit->position().y(), tpcHit->position().z());
 					}
 				}
 			} // Loop over rows in sector 20
 		} // loop over sectors
+
+
+//		BTOW HITS ==========================================================================================
+//		StEmcCollection * emc = pEvent->emcCollection();
+//		for(int btowHit = 0; btowHit < 4800; btowHit++) {
+//			StPicoBTowHit *tower = static_cast<StPicoBTowHit*>(mPicoDst->btowHit(j));
+//			double TowerE = tower->energy();
+//		}
+
+//		====================================================================================================
+
 
 		StSPtrVecTrackNode & trackNode = pEvent->trackNodes();
 		int nTracks = trackNode.size();
@@ -181,8 +190,14 @@ void myStEventAnalyser(int numberOfEvents, const char * file, int eventToSelect 
 			if (!trackParams) {cout << "-=- No track params for primary track -=-" << endl; continue;}
 
 //			CUTS ------------------------------------------
-			if (trackParams->momentum().pseudoRapidity() > 0.5) continue;
+#if 0
+//			if (trackParams->momentum().pseudoRapidity() > 0.5) continue;
+			double phi_track = trackParams->momentum().phi();
+			double eta_track = trackParams->momentum().pseudoRapidity();
+			if (!(sqrt((3.73224 - phi_track)*(3.73224 - phi_track) + (0.358856 - eta_track)*(0.358856 - eta_track)) < 0.4 ||
+				sqrt((0.596783 - phi_track)*(0.596783 - phi_track) + (-0.17974 - eta_track)*(-0.17974 - eta_track)) < 0.4)) continue;
 //			CUTS ------------------------------------------
+# endif
 
 //			if (track->idTruth() != 8) continue;
 //			cout << track->idTruth() << endl;
@@ -231,31 +246,28 @@ void myStEventAnalyser(int numberOfEvents, const char * file, int eventToSelect 
 
 					if (!tpcHit) continue;
 //					if (tpcHit->flag() != 0) continue;
-					if (tpcHit->flag() > 1) continue;
+//					if (tpcHit->flag() > 1) continue;
 
 					float hitX = tpcHit->position().x();
 					float hitY = tpcHit->position().y();
 					float hitZ = tpcHit->position().z();
 					
-					fprintf(hitsOnTracks, "%.2f, %.2f, %.2f, %d, %d, %d, %d\n", hitX, hitY, hitZ, myR, myG, myB, pEvent->id());
+					fprintf(hitsOnTracks, "%d, %d, %d, %d, %d, %d, %d, %d, %.2f, %.2f, %.2f, %d, %d, %d\n", pEvent->id(), trackNumber, tpcHit->flag(), tpcHit->sector(), tpcHit->padrow(), tpcHit->minPad(), tpcHit->maxPad(), tpcHit->adc(), hitX, hitY, hitZ, myR, myG, myB);
 			}
 
-			double thickness = (o_trackParams->origin().z() + 410) * 4/410;
-			thickness = thickness < 0 ? 0 : thickness;
-			if (trackParams->momentum().z() < 0) thickness = TMath::Abs(o_trackParams->origin().z()) *0.5 / 200 ;
 			double length = TMath::Sqrt(o_trackParams->origin().x() * o_trackParams->origin().x() + o_trackParams->origin().y() * o_trackParams->origin().y());
 			double segmentLength = trackParams->momentum().perp() * 40/2;
 			double segmentLength1 = (o_trackParams->origin().z() + 410) * segmentLength/410;
 
-			fprintf(dataOut, "%.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, %d, %d, %.2f, %.2f\n",
+			fprintf(dataOut, "%d, %d, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, %d, %d, %d, %d, %.2f, %.2f, %.2f\n", pEvent->id(), trackNumber,
 					trackParams->origin().x(), trackParams->origin().y(), trackParams->origin().z(),
 					o_trackParams->origin().x(), o_trackParams->origin().y(), o_trackParams->origin().z(),
-					trackParams->origin().x(), trackParams->origin().y(), trackParams->origin().z(),
+					trackParams->momentum().x(), trackParams->momentum().y(), trackParams->momentum().z(),
 					myR, myG,myB, 
-					myCharge, 1/trackParams->curvature(), trackParams->momentum().perp());
+					myCharge, 1/trackParams->curvature(), trackParams->momentum().perp(), track->length());
 		}
-		fclose(dataOut);
-		fclose(hitMap);
 	} // Event Loop
+	fclose(hitMap);
+	fclose(dataOut);
 	fclose(hitsOnTracks);
 }
